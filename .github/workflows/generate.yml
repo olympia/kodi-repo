@@ -1,0 +1,39 @@
+name: Generate Repository
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'addons.xml'
+      - 'addons.xml.md5'
+      - '**/*.zip'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run generator
+        run: python _generator.py
+
+      - name: Commit and push generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add addons.xml addons.xml.md5 '**/*.zip'
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-generate repo files"
+            git push
+          fi
