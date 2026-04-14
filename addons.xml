@@ -1,19 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addons>
-  <addon id="metadata.universal.python" name="Universal Movie Scraper" version="0.1.0" provider-name="Olympia">
+  <addon id="metadata.universal.python"
+         name="Universal Movie Scraper (Python)"
+         version="0.0.6"
+         provider-name="rmrector, Olympia / Team Kodi">
     <requires>
       <import addon="xbmc.python" version="3.0.0"/>
-      <import addon="xbmc.metadata.scraper.movies" version="1.0"/>
+      <import addon="xbmc.metadata" version="2.1.0"/>
     </requires>
-    <extension point="xbmc.metadata.scraper.movies" language="en"/>
-    <extension point="xbmc.python.script" library="default.py"/>
+    <extension point="xbmc.metadata.scraper.movies"
+               language="en"
+               library="scraper.py"/>
     <extension point="xbmc.addon.metadata">
-      <summary lang="en">Universal Movie Scraper (Python rewrite)</summary>
-      <description lang="en">Scrapes movie metadata from multiple sources including TMDB and a local IMDb cache.</description>
       <platform>all</platform>
-      <license>GPL-2.0-or-later</license>
-      <source>https://github.com/olympia/kodi-repo</source>
-      <website>https://github.com/olympia/kodi-repo</website>
+      <license>GPL v2.0</license>
+      <forum>https://forum.kodi.tv/showthread.php?tid=129821</forum>
+      <assets>
+          <icon>icon.png</icon>
+      </assets>
+      <summary lang="en_US">The most customizable movie scraper for Kodi — multiple sources, per-field control.</summary>
+      <summary lang="en_GB">The most customizable movie scraper for Kodi — multiple sources, per-field control.</summary>
+      <summary lang="hu_HU">A legrugalmasabb film scraper Kodihoz — több forrás, mezőnkénti vezérlés.</summary>
+      <description lang="en_US">Universal Movie Scraper is the most configurable movie metadata provider for Kodi. It combines data from multiple sources and lets you choose, field by field, where each piece of information comes from.
+  
+  Supported sources: TMDb (search, title, plot, tagline, genres, cast, studio, country, certifications, artwork, trailers, movie sets), IMDb non-commercial datasets (ratings, votes, genres), OMDb API (Rotten Tomatoes and MetaCritic scores, plot outline), Rotten Tomatoes (Critics' Consensus), fanart.tv (clearlogo, clearart, banner, landscape, discart, keyart — for movies and sets), and Trakt (ratings).
+  
+  Key features:
+  - Per-field source selection: pick the best source for each metadata field
+  - Per-field language control: set different languages for title, plot, tagline, genres, and artwork independently
+  - IMDb ratings without scraping: uses free daily-updated dataset files — no API key needed, no rate limits, no blocking
+  - Rotten Tomatoes Critics' Consensus: scraped directly from RT, usable as plot outline or plot
+  - Comprehensive artwork: posters, fanart, clearlogo, clearart, banner, landscape, discart, keyart from both TMDb and fanart.tv
+  - Full movie set support with artwork from both sources
+  - IMDb Top 250 position tracking
+  
+  With special thanks to rmrector, whose metadata.themoviedb.org.python scraper provided the solid foundation upon which Universal Movie Scraper's extended multi-source capabilities were built.</description>
+      <description lang="en_GB">Universal Movie Scraper is the most configurable movie metadata provider for Kodi. It combines data from multiple sources and lets you choose, field by field, where each piece of information comes from.
+  
+  Supported sources: TMDb (search, title, plot, tagline, genres, cast, studio, country, certifications, artwork, trailers, movie sets), IMDb non-commercial datasets (ratings, votes, genres), OMDb API (Rotten Tomatoes and MetaCritic scores, plot outline), Rotten Tomatoes (Critics' Consensus), fanart.tv (clearlogo, clearart, banner, landscape, discart, keyart — for movies and sets), and Trakt (ratings).
+  
+  Key features:
+  - Per-field source selection: pick the best source for each metadata field
+  - Per-field language control: set different languages for title, plot, tagline, genres, and artwork independently
+  - IMDb ratings without scraping: uses free daily-updated dataset files — no API key needed, no rate limits, no blocking
+  - Rotten Tomatoes Critics' Consensus: scraped directly from RT, usable as plot outline or plot
+  - Comprehensive artwork: posters, fanart, clearlogo, clearart, banner, landscape, discart, keyart from both TMDb and fanart.tv
+  - Full movie set support with artwork from both sources
+  - IMDb Top 250 position tracking
+  
+  With special thanks to rmrector, whose metadata.themoviedb.org.python scraper provided the solid foundation upon which Universal Movie Scraper's extended multi-source capabilities were built.</description>
+      <description lang="hu_HU">A Universal Movie Scraper a legrugalmasabb film metaadat szolgáltató Kodihoz. Több forrásból gyűjt adatokat, és mezőnként kiválasztható, hogy melyik forrásból származzon az adott információ.
+  
+  Támogatott források: TMDb (keresés, cím, leírás, szlogen, műfajok, szereplők, stúdió, ország, korhatár, képek, előzetesek, filmsorozatok), IMDb nem kereskedelmi adatkészletek (értékelések, szavazatok, műfajok), OMDb API (Rotten Tomatoes és MetaCritic pontszámok, rövid leírás), Rotten Tomatoes (Critics' Consensus), fanart.tv (clearlogo, clearart, banner, landscape, discart, keyart — filmekhez és sorozatokhoz), és Trakt (értékelések).
+  
+  Főbb funkciók:
+  - Mezőnkénti forrásválasztás: válaszd ki a legjobb forrást minden egyes metaadat mezőhöz
+  - Mezőnkénti nyelvvezérlés: különböző nyelvek állíthatók a címhez, leíráshoz, szlogenhez, műfajokhoz és képekhez
+  - IMDb értékelések scraping nélkül: ingyenes, naponta frissülő adatkészlet fájlok — nem kell API kulcs, nincs rate limit, nincs blokkolás
+  - Rotten Tomatoes Critics' Consensus: közvetlenül az RT oldalról, használható leírásként vagy rövid összefoglalóként
+  - Átfogó képanyag: poszterek, fanart, clearlogo, clearart, banner, landscape, discart, keyart a TMDb és fanart.tv forrásokból
+  - Teljes filmsorozat támogatás mindkét forrásból származó képekkel
+  - IMDb Top 250 pozíció követés
+  
+  Külön köszönet rmrectornak, akinek a metadata.themoviedb.org.python scrapere szolgált alapul a Universal Movie Scraper kibővített többforrású képességeinek megépítéséhez.</description>
     </extension>
   </addon>
   <addon id="repository.olympia" name="Olympia's Repository" version="1.0.0" provider-name="Olympia">
