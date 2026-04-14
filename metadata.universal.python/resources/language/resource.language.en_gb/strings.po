@@ -1,0 +1,267 @@
+# Kodi Media Center language file
+# Addon Name: Universal Movie Scraper (Python)
+# Addon id: metadata.universal.python
+msgid ""
+msgstr ""
+"Project-Id-Version: metadata.universal.python\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: Team Kodi\n"
+"Language-Team: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#30001"
+msgid "Enable TMDb fanart (backdrops)"
+msgstr ""
+
+msgctxt "#30002"
+msgid "TMDb posters"
+msgstr ""
+
+msgctxt "#30009"
+msgid "Enable trailers"
+msgstr ""
+
+msgctxt "#30012"
+msgid "Trailer"
+msgstr ""
+
+msgctxt "#30013"
+msgid "Enable movie set info"
+msgstr ""
+
+msgctxt "#30014"
+msgid "Plot source"
+msgstr ""
+
+msgctxt "#30015"
+msgid "Cast & crew source"
+msgstr ""
+
+msgctxt "#30020"
+msgid "Plot language (TMDb)"
+msgstr ""
+
+msgctxt "#30021"
+msgid "Default rating source"
+msgstr ""
+
+msgctxt "#30022"
+msgid "Genres source"
+msgstr ""
+
+msgctxt "#30023"
+msgid "Original title language (TMDb)"
+msgstr ""
+
+msgctxt "#30024"
+msgid "Original title language (TMDb)"
+msgstr ""
+
+msgctxt "#30027"
+msgid "Title language (TMDb)"
+msgstr ""
+
+msgctxt "#30032"
+msgid "Certification source"
+msgstr ""
+
+msgctxt "#30033"
+msgid "Certification country"
+msgstr ""
+
+msgctxt "#30034"
+msgid "Preferred fanart.tv poster language"
+msgstr ""
+
+msgctxt "#30035"
+msgid "Certification prefix"
+msgstr ""
+
+msgctxt "#30036"
+msgid "Preferred TMDb poster language"
+msgstr ""
+
+msgctxt "#30040"
+msgid "Genres language (TMDb)"
+msgstr ""
+
+msgctxt "#30041"
+msgid "Trailer language (TMDb, fallback: English)"
+msgstr ""
+
+msgctxt "#30042"
+msgid "Tagline source"
+msgstr ""
+
+msgctxt "#30043"
+msgid "Tagline language (TMDb)"
+msgstr ""
+
+msgctxt "#30044"
+msgid "Get IMDb Top 250 position"
+msgstr ""
+
+msgctxt "#30045"
+msgid "Plot outline source"
+msgstr ""
+
+msgctxt "#30046"
+msgid "Language for movie sets (TMDb)"
+msgstr ""
+
+msgctxt "#30048"
+msgid "Enable TMDb tags (keywords)"
+msgstr ""
+
+msgctxt "#30049"
+msgid "Enable tag whitelist"
+msgstr ""
+
+msgctxt "#30060"
+msgid "Max artwork per type"
+msgstr ""
+
+msgctxt "#30100"
+msgid "Ratings & Certifications"
+msgstr ""
+
+msgctxt "#30111"
+msgid "Also get IMDb rating"
+msgstr ""
+
+msgctxt "#30112"
+msgid "Also get Rotten Tomatoes score (requires OMDb key)"
+msgstr ""
+
+msgctxt "#30113"
+msgid "Also get MetaCritic score (requires OMDb key)"
+msgstr ""
+
+msgctxt "#30114"
+msgid "Also get TMDb rating"
+msgstr ""
+
+msgctxt "#30115"
+msgid "Also get Trakt rating"
+msgstr ""
+
+msgctxt "#30116"
+msgid "OMDb API key (free at omdbapi.com)"
+msgstr ""
+
+msgctxt "#30130"
+msgid "IMDb dataset update interval (days)"
+msgstr ""
+
+msgctxt "#30200"
+msgid "Credits"
+msgstr ""
+
+msgctxt "#30210"
+msgid "Allow multiple studios"
+msgstr ""
+
+msgctxt "#30300"
+msgid "Search & Advanced"
+msgstr ""
+
+msgctxt "#30308"
+msgid "Search language"
+msgstr ""
+
+msgctxt "#30310"
+msgid "Use IMDb as fallback when TMDb cannot find movie"
+msgstr ""
+
+msgctxt "#30400"
+msgid "Descriptions"
+msgstr ""
+
+msgctxt "#30502"
+msgid "fanart.tv posters (titled)"
+msgstr ""
+
+msgctxt "#30503"
+msgid "fanart.tv fanart (backdrops)"
+msgstr ""
+
+msgctxt "#30510"
+msgid "fanart.tv personal client key"
+msgstr ""
+
+msgctxt "#30700"
+msgid "Posters & Fanart"
+msgstr ""
+
+msgctxt "#30701"
+msgid "Extra Artwork"
+msgstr ""
+
+msgctxt "#30702"
+msgid "fanart.tv clearlogo"
+msgstr ""
+
+msgctxt "#30703"
+msgid "fanart.tv clearart"
+msgstr ""
+
+msgctxt "#30704"
+msgid "fanart.tv banner"
+msgstr ""
+
+msgctxt "#30705"
+msgid "fanart.tv landscape"
+msgstr ""
+
+msgctxt "#30706"
+msgid "fanart.tv discart"
+msgstr ""
+
+msgctxt "#30707"
+msgid "TMDb landscape (backdrops as landscape)"
+msgstr ""
+
+msgctxt "#30708"
+msgid "fanart.tv keyart (untitled posters)"
+msgstr ""
+
+msgctxt "#30801"
+msgid "Set Artwork"
+msgstr ""
+
+msgctxt "#30802"
+msgid "fanart.tv set poster"
+msgstr ""
+
+msgctxt "#30803"
+msgid "fanart.tv set fanart"
+msgstr ""
+
+msgctxt "#30804"
+msgid "fanart.tv set clearlogo"
+msgstr ""
+
+msgctxt "#30805"
+msgid "fanart.tv set clearart"
+msgstr ""
+
+msgctxt "#30806"
+msgid "fanart.tv set banner"
+msgstr ""
+
+msgctxt "#30807"
+msgid "fanart.tv set landscape"
+msgstr ""
+
+msgctxt "#30808"
+msgid "fanart.tv set discart"
+msgstr ""
+
+msgctxt "#30900"
+msgid "Internal"
+msgstr ""
