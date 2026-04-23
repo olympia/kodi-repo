@@ -114,6 +114,10 @@ msgctxt "#30046"
 msgid "Language for movie sets (TMDb)"
 msgstr ""
 
+msgctxt "#30047"
+msgid "IMDb plot: include spoilers"
+msgstr ""
+
 msgctxt "#30048"
 msgid "Enable TMDb tags (keywords)"
 msgstr ""

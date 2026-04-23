@@ -59,12 +59,17 @@ query GetMovieDetails($id: ID!) {
     plot {
       plotText { plainText }
     }
-    plots(first: 5) {
+    summaries: plots(first: 5, filter: {spoilers: EXCLUDE_SPOILERS}) {
       edges {
         node {
           plotText { plainText }
-          plotType
-          language { id }
+        }
+      }
+    }
+    allPlots: plots(first: 10) {
+      edges {
+        node {
+          plotText { plainText }
         }
       }
     }
@@ -178,11 +183,18 @@ def _graphql_request(query, variables):
         return {'error': str(e)}
 
 
-def get_details(uniqueids):
+def get_details(uniqueids, include_spoilers=False):
     """Fetch movie details from IMDb GraphQL API.
 
+    Args:
+        uniqueids: dict with 'imdb' key
+        include_spoilers: if True, the 'plot' field returns the best spoiler
+            summary (IMDb's full synopsis) when available; otherwise it returns
+            the best spoiler-free summary. 'outline' is always the short
+            outline shown at the top of IMDb's title page.
+
     Returns dict with optional keys:
-      'info': plot, tagline, outline, genres, mpaa
+      'info': plot, outline, tagline, genres, mpaa, title, premiered, ...
       'ratings': imdb rating/votes
       'cast': list of cast dicts with name, role, thumbnail, order
       'directors': list of director names
@@ -243,26 +255,42 @@ def get_details(uniqueids):
     if primary_image and primary_image.get('url'):
         info['poster_url'] = primary_image['url']
 
-    # Plot
+    # Plot outline — always the short text shown at the top of IMDb's title
+    # page (title.plot scalar). This is the IMDb "Outline" plot type.
+    outline_text = ''
     plot_data = title_data.get('plot')
     if plot_data and plot_data.get('plotText'):
-        info['plot'] = plot_data['plotText'].get('plainText', '')
+        outline_text = plot_data['plotText'].get('plainText', '') or ''
+    if outline_text:
+        info['outline'] = outline_text
 
-    # Outline — prefer OUTLINE type from plots list
-    plots_edges = (title_data.get('plots') or {}).get('edges', [])
-    outline = ''
-    for edge in plots_edges:
-        node = edge.get('node', {})
-        plot_type = node.get('plotType', '')
-        text = (node.get('plotText') or {}).get('plainText', '')
+    # Longer plot — choose from the plots connection.
+    #   summaries: best spoiler-free summary
+    #   synopsis:  best spoiler summary (IMDb's full "Synopsis" plot type),
+    #              computed as allPlots minus summaries
+    summary_texts = []
+    for edge in ((title_data.get('summaries') or {}).get('edges', []) or []):
+        text = ((edge.get('node') or {}).get('plotText') or {}).get('plainText', '')
         if text:
-            if plot_type == 'OUTLINE':
-                outline = text
-                break
-            elif not outline or len(text) < len(outline):
-                outline = text
-    if outline:
-        info['outline'] = outline
+            summary_texts.append(text)
+
+    all_texts = []
+    for edge in ((title_data.get('allPlots') or {}).get('edges', []) or []):
+        text = ((edge.get('node') or {}).get('plotText') or {}).get('plainText', '')
+        if text:
+            all_texts.append(text)
+
+    best_summary = max(summary_texts, key=len) if summary_texts else ''
+    summary_set = set(summary_texts)
+    spoiler_candidates = [t for t in all_texts if t not in summary_set]
+    best_spoiler = max(spoiler_candidates, key=len) if spoiler_candidates else ''
+
+    if include_spoilers:
+        plot_text = best_spoiler or best_summary or outline_text
+    else:
+        plot_text = best_summary or outline_text
+    if plot_text:
+        info['plot'] = plot_text
 
     # Tagline
     taglines_edges = (title_data.get('taglines') or {}).get('edges', [])

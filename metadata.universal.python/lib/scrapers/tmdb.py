@@ -183,7 +183,7 @@ class TMDBMovieScraper(object):
             'studio': _get_names(movie['production_companies']),
             'genre': _get_names(genres_movie.get('genres', movie.get('genres', []))),
             'country': _get_names(movie['production_countries']),
-            'credits': _get_cast_members(movie['casts'], 'crew', 'Writing', ['Screenplay', 'Writer', 'Author']),
+            'credits': _get_cast_members(movie['casts'], 'crew', 'Writing', ['Screenplay', 'Writer', 'Author', 'Novel', 'Story', 'Book', 'Original Story']),
             'director': _get_cast_members(movie['casts'], 'crew', 'Directing', ['Director']),
             'premiered': movie['release_date'],
             'tag': _get_names(movie['keywords']['keywords'])

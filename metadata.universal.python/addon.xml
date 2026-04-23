@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="metadata.universal.python"
        name="Universal Movie Scraper (Python)"
-       version="0.0.6"
+       version="0.0.7"
        provider-name="rmrector, Olympia / Team Kodi">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>

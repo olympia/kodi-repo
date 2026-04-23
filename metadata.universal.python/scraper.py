@@ -70,14 +70,14 @@ def get_tmdb_scraper(settings):
                             trailer_language=trailer_language,
                             fetch_sets=fetch_sets)
 
-def _build_imdb_fallback_details(imdb_id):
+def _build_imdb_fallback_details(imdb_id, include_spoilers=False):
     """Build a details dict from IMDb sources when TMDb cannot find the movie.
 
     Returns a details dict in the same structure as TMDBMovieScraper.get_details(),
     or None if IMDb GraphQL also fails.
     """
     log('TMDb lookup failed, attempting IMDb fallback for {}'.format(imdb_id), xbmc.LOGINFO)
-    imdb_gql = get_imdb_graphql_details({'imdb': imdb_id})
+    imdb_gql = get_imdb_graphql_details({'imdb': imdb_id}, include_spoilers=include_spoilers)
     if not imdb_gql or 'error' in imdb_gql:
         log('IMDb fallback failed: {}'.format(
             imdb_gql.get('error', 'no data') if imdb_gql else 'no response'), xbmc.LOGWARNING)
@@ -210,7 +210,8 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
         # Try IMDb fallback if enabled and we have an IMDb ID
         imdb_id = input_uniqueids.get('imdb')
         if imdb_id and settings.getSettingBool('imdb_fallback'):
-            details = _build_imdb_fallback_details(imdb_id)
+            _include_spoilers_fb = settings.getSettingBool('imdb_plot_include_spoilers')
+            details = _build_imdb_fallback_details(imdb_id, include_spoilers=_include_spoilers_fb)
             if details:
                 _imdb_fallback = True
                 log('IMDb fallback succeeded for {}'.format(imdb_id), xbmc.LOGINFO)
@@ -328,7 +329,9 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
 
         imdb_gql = None
         if _needs_imdb_graphql:
-            imdb_gql = get_imdb_graphql_details(details['uniqueids'])
+            _include_spoilers = settings.getSettingBool('imdb_plot_include_spoilers')
+            imdb_gql = get_imdb_graphql_details(details['uniqueids'],
+                                                include_spoilers=_include_spoilers)
             if imdb_gql and 'error' not in imdb_gql:
                 gql_info = imdb_gql.get('info', {})
 

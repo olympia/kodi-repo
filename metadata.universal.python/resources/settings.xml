@@ -187,6 +187,16 @@
 					</constraints>
 					<control type="list" format="string"><heading>30020</heading></control>
 				</setting>
+				<setting id="imdb_plot_include_spoilers" parent="plotsource" type="boolean" label="30047" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="plotsource">IMDb</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
 			</group>
 			<group id="2">
 				<setting id="taglinesource" type="string" label="30042" help="">
