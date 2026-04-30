@@ -288,6 +288,11 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="multiple_countries" type="boolean" label="30211" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
 			</group>
 		</category>
 
@@ -366,6 +371,11 @@
 		<!-- Extra Artwork -->
 		<category id="extraart" label="30701" help="">
 			<group id="1">
+				<setting id="tmdbclearlogo" type="boolean" label="30709" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 				<setting id="fanarttvclearlogo" type="boolean" label="30702" help="">
 					<level>0</level>
 					<default>true</default>

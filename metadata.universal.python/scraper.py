@@ -14,7 +14,6 @@ from lib.scrapers.imdb_dataset import update_database as imdb_dataset_update
 from lib.scrapers.traktratings import get_trakt_ratinginfo
 from lib.scrapers.omdbapi import get_details as get_omdb_details
 from lib.scrapers.rottentomatoes import get_rt_data
-from lib.scrapers.imdb_top250 import get_top250_rank
 from scraper_datahelper import combine_scraped_details_info_and_ratings, \
     combine_scraped_details_available_artwork, find_uniqueids_in_text, get_params
 from scraper_config import configure_scraped_details, PathSpecificSettings, \
@@ -105,6 +104,9 @@ def _build_imdb_fallback_details(imdb_id, include_spoilers=False):
 
     if gql_info.get('outline'):
         info['plotoutline'] = gql_info['outline']
+
+    if gql_info.get('top250'):
+        info['top250'] = gql_info['top250']
 
     # Certification by country
     certs = imdb_gql.get('certifications', {})
@@ -222,6 +224,9 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                     cert_value = certs.get(cert_country, '')
                     if cert_value:
                         details['info']['mpaa'] = cert_value
+                # Honor the imdbtop250 setting in fallback mode too
+                if not settings.getSettingBool('imdbtop250'):
+                    details['info'].pop('top250', None)
         if not details:
             return False
     if 'error' in details:
@@ -324,8 +329,10 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
         _imdb_credits = settings.getSettingString('creditssource') == 'IMDb'
         _imdb_cert = settings.getSettingString('certsource') == 'IMDb'
         _imdb_genres = settings.getSettingString('genressource') == 'IMDb'
+        _imdb_top250 = settings.getSettingBool('imdbtop250')
         _needs_imdb_graphql = (_imdb_plot or _imdb_tagline or _imdb_outline or
-                               _imdb_credits or _imdb_cert or _imdb_genres)
+                               _imdb_credits or _imdb_cert or _imdb_genres or
+                               _imdb_top250)
 
         imdb_gql = None
         if _needs_imdb_graphql:
@@ -362,6 +369,9 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                 # Genres
                 if _imdb_genres and gql_info.get('genres'):
                     details['info']['genre'] = gql_info['genres']
+                # Top 250 rank
+                if _imdb_top250 and gql_info.get('top250'):
+                    details['info']['top250'] = gql_info['top250']
             elif imdb_gql and 'error' in imdb_gql:
                 log('IMDb GraphQL error: ' + imdb_gql['error'], xbmc.LOGWARNING)
 
@@ -386,14 +396,6 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
 
     if settings.getSettingString('taglinesource') == 'None':
         details['info']['tagline'] = ''
-
-    # IMDb Top 250
-    if settings.getSettingBool('imdbtop250'):
-        imdb_id = details['uniqueids'].get('imdb')
-        if imdb_id:
-            rank = get_top250_rank(imdb_id)
-            if rank:
-                details['info']['top250'] = rank
 
     details = configure_scraped_details(details, settings)
 

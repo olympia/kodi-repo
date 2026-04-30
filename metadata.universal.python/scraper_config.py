@@ -3,6 +3,7 @@ def configure_scraped_details(details, settings):
     details = _configure_keeporiginaltitle(details, settings)
     details = _configure_trailer(details, settings)
     details = _configure_multiple_studios(details, settings)
+    details = _configure_multiple_countries(details, settings)
     details = _configure_default_rating(details, settings)
     details = _configure_tags(details, settings)
     return details
@@ -38,6 +39,10 @@ def configure_tmdb_artwork(details, settings):
     if not posters_enabled:
         art.pop('keyart', None)
         art.pop('set.keyart', None)
+
+    # TMDb clearlogo (movie logos) — separate per-source toggle
+    if not settings.getSettingBool('tmdbclearlogo'):
+        art.pop('clearlogo', None)
 
     return details
 
@@ -112,6 +117,12 @@ def _configure_trailer(details, settings):
 def _configure_multiple_studios(details, settings):
     if not settings.getSettingBool('multiple_studios'):
         details['info']['studio'] = details['info']['studio'][:1]
+    return details
+
+def _configure_multiple_countries(details, settings):
+    if not settings.getSettingBool('multiple_countries'):
+        if details['info'].get('country'):
+            details['info']['country'] = details['info']['country'][:1]
     return details
 
 def _configure_default_rating(details, settings):

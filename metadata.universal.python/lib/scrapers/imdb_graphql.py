@@ -83,6 +83,7 @@ query GetMovieDetails($id: ID!) {
     ratingsSummary {
       aggregateRating
       voteCount
+      topRanking { rank }
     }
     genres {
       genres {
@@ -308,6 +309,13 @@ def get_details(uniqueids, include_spoilers=False):
     cert_data = title_data.get('certificate')
     if cert_data and cert_data.get('rating'):
         info['mpaa'] = cert_data['rating']
+
+    # Top 250 rank — only if the movie is actually in the top 250
+    ratings_summary = title_data.get('ratingsSummary') or {}
+    top_ranking = ratings_summary.get('topRanking') or {}
+    rank = top_ranking.get('rank')
+    if rank and rank <= 250:
+        info['top250'] = rank
 
     if info:
         result['info'] = info

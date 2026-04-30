@@ -170,6 +170,10 @@ msgctxt "#30210"
 msgid "Allow multiple studios"
 msgstr ""
 
+msgctxt "#30211"
+msgid "Allow multiple countries"
+msgstr ""
+
 msgctxt "#30300"
 msgid "Search & Advanced"
 msgstr ""
@@ -232,6 +236,10 @@ msgstr ""
 
 msgctxt "#30708"
 msgid "fanart.tv keyart (untitled posters)"
+msgstr ""
+
+msgctxt "#30709"
+msgid "TMDb clearlogo"
 msgstr ""
 
 msgctxt "#30801"
