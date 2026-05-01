@@ -49,7 +49,6 @@ def get_tmdb_scraper(settings):
     language = settings.getSettingString('language')
     certcountry = settings.getSettingString('tmdbcertcountry')
     search_language = settings.getSettingString('searchlanguage')
-    # Only fetch per-field language from TMDB if that field's source is TMDB
     plot_language = settings.getSettingString('plotlanguage') if settings.getSettingString('plotsource') == 'themoviedb.org' else language
     tagline_language = settings.getSettingString('taglinelanguage') if settings.getSettingString('taglinesource') == 'themoviedb.org' else language
     plot_language = plot_language or language
@@ -70,11 +69,6 @@ def get_tmdb_scraper(settings):
                             fetch_sets=fetch_sets)
 
 def _build_imdb_fallback_details(imdb_id, include_spoilers=False):
-    """Build a details dict from IMDb sources when TMDb cannot find the movie.
-
-    Returns a details dict in the same structure as TMDBMovieScraper.get_details(),
-    or None if IMDb GraphQL also fails.
-    """
     log('TMDb lookup failed, attempting IMDb fallback for {}'.format(imdb_id), xbmc.LOGINFO)
     imdb_gql = get_imdb_graphql_details({'imdb': imdb_id}, include_spoilers=include_spoilers)
     if not imdb_gql or 'error' in imdb_gql:
@@ -108,17 +102,14 @@ def _build_imdb_fallback_details(imdb_id, include_spoilers=False):
     if gql_info.get('top250'):
         info['top250'] = gql_info['top250']
 
-    # Certification by country
     certs = imdb_gql.get('certifications', {})
     if certs:
         info['_imdb_certifications'] = certs
 
-    # Ratings from GraphQL (fallback to dataset happens in main pipeline)
     ratings = {}
     if imdb_gql.get('ratings', {}).get('imdb'):
         ratings['imdb'] = imdb_gql['ratings']['imdb']
 
-    # Poster from IMDb primary image
     available_art = {}
     poster_url = gql_info.get('poster_url')
     if poster_url:
@@ -194,13 +185,13 @@ def add_artworks(listitem, artworks, IMAGE_LIMIT):
 
     fanart_to_set = [{'image': image['url'], 'preview': image['preview']}
         for image in artworks.get('fanart', ())[:IMAGE_LIMIT]]
-    listitem.setAvailableFanart(fanart_to_set)
+    if fanart_to_set:
+        listitem.setAvailableFanart(fanart_to_set)
 
 def get_details(input_uniqueids, handle, settings, fail_silently=False):
     if not input_uniqueids:
         return False
 
-    # Ensure IMDb dataset is available if we need IMDb ratings
     _default_rating = settings.getSettingString('mratingsource')
     _need_imdb_rating = (_default_rating == 'IMDb' or settings.getSettingBool('alsoimdb'))
     if _need_imdb_rating:
@@ -209,7 +200,6 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
     details = get_tmdb_scraper(settings).get_details(input_uniqueids)
     _imdb_fallback = False
     if not details:
-        # Try IMDb fallback if enabled and we have an IMDb ID
         imdb_id = input_uniqueids.get('imdb')
         if imdb_id and settings.getSettingBool('imdb_fallback'):
             _include_spoilers_fb = settings.getSettingBool('imdb_plot_include_spoilers')
@@ -217,14 +207,12 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
             if details:
                 _imdb_fallback = True
                 log('IMDb fallback succeeded for {}'.format(imdb_id), xbmc.LOGINFO)
-                # Apply certification from IMDb fallback data
                 certs = details['info'].pop('_imdb_certifications', {})
                 if certs:
                     cert_country = settings.getSettingString('tmdbcertcountry').upper()
                     cert_value = certs.get(cert_country, '')
                     if cert_value:
                         details['info']['mpaa'] = cert_value
-                # Honor the imdbtop250 setting in fallback mode too
                 if not settings.getSettingBool('imdbtop250'):
                     details['info'].pop('top250', None)
         if not details:
@@ -239,32 +227,31 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
 
     details = configure_tmdb_artwork(details, settings)
 
-    # === Ratings: fetch from all configured sources ===
     _default_rating = settings.getSettingString('mratingsource')
 
-    # IMDb rating from dataset
     if _default_rating == 'IMDb' or settings.getSettingBool('alsoimdb'):
         imdbinfo = get_imdb_details(details['uniqueids'])
         if imdbinfo:
             details = combine_scraped_details_info_and_ratings(details, imdbinfo)
 
-    # TMDb rating is already in details['ratings']['themoviedb'] from TMDB API
-    # Remove it if user doesn't want it and it's not the default
     if _default_rating != 'themoviedb.org' and not settings.getSettingBool('alsotmdb'):
         details['ratings'].pop('themoviedb', None)
 
-    # Trakt rating
     if _default_rating == 'Trakt' or settings.getSettingBool('alsotrakt'):
         traktinfo = get_trakt_ratinginfo(details['uniqueids'])
         details = combine_scraped_details_info_and_ratings(details, traktinfo)
 
-    # OMDb — single call for RT/MetaCritic ratings AND RT consensus
     _need_rt = (_default_rating == 'Rotten Tomatoes' or settings.getSettingBool('alsorotten'))
+    _need_topcritics = (_default_rating == 'Top Critics' or
+                        settings.getSettingBool('alsotopcritics'))
+    _need_popcornmeter = (_default_rating == 'Popcornmeter' or
+                          settings.getSettingBool('alsopopcornmeter'))
     _need_meta = (_default_rating == 'MetaCritic' or settings.getSettingBool('alsometa'))
     _outline_source = settings.getSettingString('outlinesource')
     _plot_source = settings.getSettingString('plotsource')
     _need_rt_consensus = (_outline_source == 'RottenTomatoes' or _plot_source == 'RottenTomatoes')
-    _need_omdb = _need_rt or _need_meta or _need_rt_consensus
+    _need_omdb = (_need_rt or _need_topcritics or _need_popcornmeter or
+                  _need_meta or _need_rt_consensus)
     _omdb_result = None
     if _need_omdb:
         omdb_key = settings.getSettingString('omdbapikey') or settings.getSettingString('omdbapikey_outline')
@@ -279,11 +266,11 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
             elif _omdb_result and 'error' in _omdb_result:
                 log('OMDb error: ' + _omdb_result['error'], xbmc.LOGWARNING)
         else:
-            if _need_rt or _need_meta:
-                log('OMDb API key not set, cannot fetch RT/MetaCritic ratings', xbmc.LOGWARNING)
+            if _need_rt or _need_topcritics or _need_popcornmeter or _need_meta:
+                log('OMDb API key not set, cannot fetch RT/MetaCritic ratings',
+                    xbmc.LOGWARNING)
 
-    # RT page scraping — for consensus text AND/OR vote count for RT rating
-    _need_rt_page = _need_rt_consensus or _need_rt
+    _need_rt_page = (_need_rt_consensus or _need_rt or _need_topcritics or _need_popcornmeter)
     _rt_data = None
     if _need_rt_page:
         rt_url = ''
@@ -294,24 +281,51 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
             log('Scraping RT page: {}'.format(rt_url), xbmc.LOGINFO)
             _rt_data = get_rt_data(rt_url)
 
-            # Update RT rating vote count from RT page
-            if _need_rt and _rt_data and _rt_data.get('reviewcount'):
+            if _need_rt and _rt_data and _rt_data.get('tomatometer') is not None:
+                if 'rottentomatoes' not in details['ratings']:
+                    details['ratings']['rottentomatoes'] = {'rating': 0.0, 'votes': 0}
+                details['ratings']['rottentomatoes']['rating'] = \
+                    float(_rt_data['tomatometer']) / 10.0
+                if _rt_data.get('reviewcount'):
+                    details['ratings']['rottentomatoes']['votes'] = _rt_data['reviewcount']
+                log('Updated Tomatometer to {}% ({} reviews) from RT page'.format(
+                    _rt_data['tomatometer'], _rt_data.get('reviewcount') or 0),
+                    xbmc.LOGINFO)
+            elif _need_rt and _rt_data and _rt_data.get('reviewcount'):
                 if 'rottentomatoes' in details['ratings']:
                     details['ratings']['rottentomatoes']['votes'] = _rt_data['reviewcount']
-                    log('Updated RT votes to {}'.format(_rt_data['reviewcount']), xbmc.LOGINFO)
+                    log('Updated RT votes to {} (score from OMDb retained)'.format(
+                        _rt_data['reviewcount']), xbmc.LOGINFO)
 
-    # fanart.tv artwork — fetched BEFORE combining so it takes priority
+            if _need_topcritics and _rt_data and _rt_data.get('topcriticsscore') is not None:
+                details['ratings']['rottentomatoes_topcritics'] = {
+                    'rating': float(_rt_data['topcriticsscore']) / 10.0,
+                    'votes': _rt_data.get('topcriticscount') or 0,
+                }
+                log('Set Top Critics to {}% ({} reviews) from RT page'.format(
+                    _rt_data['topcriticsscore'], _rt_data.get('topcriticscount') or 0),
+                    xbmc.LOGINFO)
+            elif _need_topcritics:
+                log('Top Critics requested but not found on RT page', xbmc.LOGWARNING)
+
+            if _need_popcornmeter and _rt_data and _rt_data.get('audiencescore') is not None:
+                details['ratings']['rottentomatoes_audience'] = {
+                    'rating': float(_rt_data['audiencescore']) / 10.0,
+                    'votes': _rt_data.get('audiencecount') or 0,
+                }
+                log('Set Popcornmeter to {}% ({} ratings) from RT page'.format(
+                    _rt_data['audiencescore'], _rt_data.get('audiencecount') or 0),
+                    xbmc.LOGINFO)
+            elif _need_popcornmeter:
+                log('Popcornmeter requested but not found on RT page', xbmc.LOGWARNING)
+
     if is_fanarttv_configured(settings):
         fanarttv_info = get_fanarttv_artwork(
             details['uniqueids'],
             settings.getSettingString('fanarttv_clientkey'),
             settings.getSettingString('fanarttvposterlanguage'),
             details['_info']['set_tmdbid'])
-
-        # Filter by per-type toggles (poster, fanart, clearlogo, etc.)
         fanarttv_info = filter_fanarttv_artwork(fanarttv_info, settings)
-
-        # Combine: fanart.tv artwork goes FIRST (higher priority than TMDB)
         ftv_lang = settings.getSettingString('fanarttvposterlanguage')
         tmdb_art_lang = settings.getSettingString('tmdbthumblanguage')
         details = combine_scraped_details_available_artwork(
@@ -320,8 +334,6 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
             settings,
             fanarttv_language=ftv_lang)
 
-    # IMDb GraphQL — single call for all IMDb-sourced fields
-    # Skip when in IMDb fallback mode (base data already comes from GraphQL)
     if not _imdb_fallback:
         _imdb_plot = _plot_source == 'IMDb'
         _imdb_tagline = settings.getSettingString('taglinesource') == 'IMDb'
@@ -341,46 +353,34 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                                                 include_spoilers=_include_spoilers)
             if imdb_gql and 'error' not in imdb_gql:
                 gql_info = imdb_gql.get('info', {})
-
-                # Plot
                 if _imdb_plot and gql_info.get('plot'):
                     details['info']['plot'] = gql_info['plot']
-                # Tagline
                 if _imdb_tagline and gql_info.get('tagline'):
                     details['info']['tagline'] = gql_info['tagline']
-                # Outline
                 if _imdb_outline and gql_info.get('outline'):
                     details['info']['plotoutline'] = gql_info['outline']
-                # Cast with photos
                 if _imdb_credits and imdb_gql.get('cast'):
                     details['cast'] = imdb_gql['cast']
-                # Directors
                 if _imdb_credits and imdb_gql.get('directors'):
                     details['info']['director'] = imdb_gql['directors']
-                # Writers
                 if _imdb_credits and imdb_gql.get('writers'):
                     details['info']['credits'] = imdb_gql['writers']
-                # Certification by country
                 if _imdb_cert and imdb_gql.get('certifications'):
                     cert_country = settings.getSettingString('tmdbcertcountry').upper()
                     cert_value = imdb_gql['certifications'].get(cert_country, '')
                     if cert_value:
                         details['info']['mpaa'] = cert_value
-                # Genres
                 if _imdb_genres and gql_info.get('genres'):
                     details['info']['genre'] = gql_info['genres']
-                # Top 250 rank
                 if _imdb_top250 and gql_info.get('top250'):
                     details['info']['top250'] = gql_info['top250']
             elif imdb_gql and 'error' in imdb_gql:
                 log('IMDb GraphQL error: ' + imdb_gql['error'], xbmc.LOGWARNING)
 
-    # RT Critics' Consensus — as outline and/or plot
     if _need_rt_consensus:
         consensus = ''
         if _rt_data:
             consensus = _rt_data.get('consensus', '')
-        # Fallback: try OMDb tomatoConsensus (deprecated) or short plot
         if not consensus and _omdb_result and 'error' not in _omdb_result:
             omdb_info = _omdb_result.get('info', {})
             consensus = omdb_info.get('rt_consensus', '')

@@ -139,7 +139,7 @@ msgid "Also get IMDb rating"
 msgstr ""
 
 msgctxt "#30112"
-msgid "Also get Rotten Tomatoes score (requires OMDb key)"
+msgid "Also get Rotten Tomatoes (All Critics) (requires OMDb key)"
 msgstr ""
 
 msgctxt "#30113"
@@ -156,6 +156,14 @@ msgstr ""
 
 msgctxt "#30116"
 msgid "OMDb API key (free at omdbapi.com)"
+msgstr ""
+
+msgctxt "#30117"
+msgid "Also get Rotten Tomatoes (Audience) (requires OMDb key)"
+msgstr ""
+
+msgctxt "#30118"
+msgid "Also get Rotten Tomatoes (Top Critics) (requires OMDb key)"
 msgstr ""
 
 msgctxt "#30130"

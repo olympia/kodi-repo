@@ -25,7 +25,6 @@ def configure_tmdb_artwork(details, settings):
         art.pop('set.fanart', None)
 
     if not settings.getSettingBool('tmdbmovielandscape'):
-        # If TMDB landscape disabled, optionally merge into fanart
         if 'landscape' in art:
             if fanart_enabled:
                 art['fanart'] = art.get('fanart', []) + art['landscape']
@@ -35,12 +34,10 @@ def configure_tmdb_artwork(details, settings):
                 art['set.fanart'] = art.get('set.fanart', []) + art['set.landscape']
             del art['set.landscape']
 
-    # keyart (untitled posters) — merge into poster if not wanted separately
     if not posters_enabled:
         art.pop('keyart', None)
         art.pop('set.keyart', None)
 
-    # TMDb clearlogo (movie logos) — separate per-source toggle
     if not settings.getSettingBool('tmdbclearlogo'):
         art.pop('clearlogo', None)
 
@@ -59,18 +56,10 @@ def is_fanarttv_configured(settings):
     return any(settings.getSettingBool(s) for s in fanarttv_settings)
 
 def filter_fanarttv_artwork(artwork_dict, settings):
-    """Filter fanart.tv artwork results based on per-type settings.
-
-    Args:
-        artwork_dict: dict with 'available_art' key from fanart.tv module
-        settings: addon settings object
-    Returns:
-        filtered artwork_dict
-    """
+    """Filter fanart.tv artwork results based on per-type settings."""
     if not artwork_dict or 'available_art' not in artwork_dict:
         return artwork_dict
 
-    # Map artwork type names → setting IDs
     type_to_setting = {
         'poster': 'fanarttvposter',
         'keyart': 'fanarttvkeyart',
@@ -127,17 +116,17 @@ def _configure_multiple_countries(details, settings):
 
 def _configure_default_rating(details, settings):
     default_source = settings.getSettingString('mratingsource')
-    # Map setting value to rating key
     source_to_key = {
         'IMDb': 'imdb',
         'themoviedb.org': 'themoviedb',
         'Trakt': 'trakt',
         'Rotten Tomatoes': 'rottentomatoes',
+        'Top Critics': 'rottentomatoes_topcritics',
+        'Popcornmeter': 'rottentomatoes_audience',
         'MetaCritic': 'metacritic',
     }
     default_rating = source_to_key.get(default_source, 'themoviedb')
     if default_rating not in details['ratings']:
-        # Fallback to first available rating
         default_rating = list(details['ratings'].keys())[0] if details['ratings'] else None
     for rating_type in details['ratings'].keys():
         details['ratings'][rating_type]['default'] = rating_type == default_rating

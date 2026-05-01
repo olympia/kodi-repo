@@ -37,21 +37,13 @@ HEADERS = {
 
 # Patterns to find Critics' Consensus on RT page
 CONSENSUS_PATTERNS = [
-    # Current RT layout (2025+): <div id="critics-consensus"> ... <p>TEXT</p>
     re.compile(r'id="critics-consensus"[^>]*>.*?<p>(.*?)</p>', re.DOTALL),
-    # data-qa attribute variant
     re.compile(r'data-qa="critics-consensus"[^>]*>([^<]+)<', re.DOTALL),
-    # Scoreboard element with consensus slot
     re.compile(r'<span\s+data-qa="critics-consensus">([^<]+)</span>', re.DOTALL),
-    # JSON-LD or script data
     re.compile(r'"criticsConsensus"\s*:\s*"([^"]+)"', re.DOTALL),
-    # Consensus paragraph
     re.compile(r'class="what-to-know__section-body"[^>]*>([^<]+)<', re.DOTALL),
-    # Older RT layout
     re.compile(r'class="mop-ratings-wrap__text--concensus"[^>]*>([^<]+)<', re.DOTALL),
-    # Another older variant
     re.compile(r'class="critics-consensus[^"]*"[^>]*>([^<]+)<', re.DOTALL),
-    # Even older
     re.compile(r'Critics Consensus:?\s*</span>\s*([^<]+)<', re.DOTALL | re.IGNORECASE),
 ]
 
@@ -64,18 +56,16 @@ def _log(msg, level=None):
 
 
 def get_rt_data(rt_url):
-    """Fetch Critics' Consensus and Tomatometer data from a Rotten Tomatoes movie page.
+    """Fetch Critics' Consensus and all RT score variants from a Rotten Tomatoes movie page.
 
-    Args:
-        rt_url: Full URL to the RT movie page
-
-    Returns:
-        dict with keys:
-            'consensus': str - Critics' Consensus text (empty if not found)
-            'tomatometer': int or None - Tomatometer score (0-100)
-            'reviewcount': int or None - Number of critic reviews
+    Returns dict with keys:
+        consensus, tomatometer, reviewcount,
+        topcriticsscore, topcriticscount,
+        audiencescore, audiencecount.
     """
-    result = {'consensus': '', 'tomatometer': None, 'reviewcount': None}
+    result = {'consensus': '', 'tomatometer': None, 'reviewcount': None,
+              'topcriticsscore': None, 'topcriticscount': None,
+              'audiencescore': None, 'audiencecount': None}
     if not rt_url:
         return result
 
@@ -97,7 +87,6 @@ def get_rt_data(rt_url):
         _log('Error fetching RT page: {}'.format(e), xbmc.LOGWARNING if xbmc else None)
         return result
 
-    # Extract Tomatometer score and review count from JSON-LD
     tomatometer, reviewcount = _parse_jsonld_ratings(html)
     result['tomatometer'] = tomatometer
     result['reviewcount'] = reviewcount
@@ -105,7 +94,22 @@ def get_rt_data(rt_url):
         _log('Found Tomatometer: {}% ({} reviews)'.format(tomatometer, reviewcount),
              xbmc.LOGINFO if xbmc else None)
 
-    # Extract Critics' Consensus
+    scorecard = _parse_media_scorecard_json(html)
+    audiencescore = _parse_audience_score(html, scorecard=scorecard)
+    audiencecount = _parse_audience_count(html, scorecard=scorecard)
+    result['audiencescore'] = audiencescore
+    result['audiencecount'] = audiencecount
+    if audiencescore is not None:
+        _log('Found Popcornmeter: {}% ({} ratings)'.format(audiencescore, audiencecount),
+             xbmc.LOGINFO if xbmc else None)
+
+    topcriticsscore, topcriticscount = _parse_topcritics(scorecard)
+    result['topcriticsscore'] = topcriticsscore
+    result['topcriticscount'] = topcriticscount
+    if topcriticsscore is not None:
+        _log('Found Top Critics: {}% ({} reviews)'.format(topcriticsscore, topcriticscount),
+             xbmc.LOGINFO if xbmc else None)
+
     consensus = _find_consensus(html)
     result['consensus'] = consensus
 
@@ -113,7 +117,6 @@ def get_rt_data(rt_url):
 
 
 def _find_consensus(html):
-    """Try all patterns to find Critics' Consensus text."""
     for i, pattern in enumerate(CONSENSUS_PATTERNS):
         match = pattern.search(html)
         if match:
@@ -140,23 +143,128 @@ def _find_consensus(html):
                  xbmc.LOGINFO if xbmc else None)
             return text
 
-    consensus_pos = html.lower().find('consensus')
-    if consensus_pos >= 0:
-        snippet = html[max(0, consensus_pos-200):consensus_pos+300]
-        _log('DEBUG: HTML near "consensus": {}'.format(repr(snippet[:400])),
-             xbmc.LOGINFO if xbmc else None)
-    else:
-        _log('DEBUG: "consensus" not found in page HTML at all',
-             xbmc.LOGINFO if xbmc else None)
-        _log('DEBUG: HTML length={}, starts with: {}'.format(len(html), repr(html[:200])),
-             xbmc.LOGINFO if xbmc else None)
-
     _log('No consensus found on page', xbmc.LOGWARNING if xbmc else None)
     return ''
 
 
+def _parse_media_scorecard_json(html):
+    """Extract and parse the media-scorecard JSON blob embedded in the RT page."""
+    m = re.search(
+        r'<script\b[^>]*id="media-scorecard-json"[^>]*>\s*(\{.*?\})\s*</script>',
+        html, re.DOTALL | re.IGNORECASE)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(1))
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+
+def _parse_topcritics(scorecard):
+    """Extract Top Critics score and count from scorecard['overlay']['criticsTop']."""
+    if not scorecard:
+        return None, None
+    overlay = scorecard.get('overlay') or {}
+    top = overlay.get('criticsTop') or {}
+
+    score = None
+    score_raw = top.get('score')
+    if score_raw is not None:
+        try:
+            val = int(str(score_raw).replace('%', '').strip())
+            if 0 <= val <= 100:
+                score = val
+        except (ValueError, TypeError):
+            pass
+
+    count = None
+    count_raw = top.get('ratingCount') or top.get('reviewCount')
+    if count_raw is not None:
+        try:
+            count = int(count_raw)
+        except (ValueError, TypeError):
+            pass
+
+    return score, count
+
+
+def _parse_audience_score(html, scorecard=None):
+    """Extract Popcornmeter (audience) score. Returns int 0-100 or None."""
+    if scorecard is None:
+        scorecard = _parse_media_scorecard_json(html)
+    if scorecard:
+        audience = scorecard.get('audienceScore') or {}
+        score = audience.get('score')
+        if score is not None:
+            try:
+                val = int(str(score).replace('%', '').strip())
+                if 0 <= val <= 100:
+                    return val
+            except (ValueError, TypeError):
+                pass
+
+    m = re.search(
+        r'<rt-text\s+[^>]*slot="audienceScore"[^>]*>\s*(\d{1,3})\s*%?\s*</rt-text>',
+        html, re.IGNORECASE | re.DOTALL)
+    if m:
+        try:
+            score = int(m.group(1))
+            if 0 <= score <= 100:
+                return score
+        except (ValueError, TypeError):
+            pass
+
+    m = re.search(r'<score-board\b[^>]*\baudiencescore="(\d{1,3})"',
+                  html, re.IGNORECASE)
+    if m:
+        try:
+            score = int(m.group(1))
+            if 0 <= score <= 100:
+                return score
+        except (ValueError, TypeError):
+            pass
+
+    return None
+
+
+def _parse_audience_count(html, scorecard=None):
+    """Extract Popcornmeter audience rating count. Returns int or None."""
+    if scorecard is None:
+        scorecard = _parse_media_scorecard_json(html)
+    if scorecard:
+        audience = scorecard.get('audienceScore') or {}
+        banded = audience.get('bandedRatingCount')
+        if banded:
+            digits = re.sub(r'[^\d]', '', str(banded))
+            if digits:
+                try:
+                    return int(digits)
+                except (ValueError, TypeError):
+                    pass
+
+    m = re.search(
+        r'<rt-text\s+[^>]*slot="audienceCount"[^>]*>\s*([\d,]+)',
+        html, re.IGNORECASE | re.DOTALL)
+    if m:
+        try:
+            return int(m.group(1).replace(',', ''))
+        except (ValueError, TypeError):
+            pass
+
+    m = re.search(r'([\d,]+)\s*(?:Verified\s+)?Ratings\b', html, re.IGNORECASE)
+    if m:
+        try:
+            count = int(m.group(1).replace(',', ''))
+            if count >= 5:
+                return count
+        except (ValueError, TypeError):
+            pass
+
+    return None
+
+
 def _parse_jsonld_ratings(html):
-    """Extract Tomatometer score and review count from JSON-LD aggregateRating."""
+    """Extract Tomatometer (All Critics) score and review count from JSON-LD aggregateRating."""
     try:
         ld_matches = re.findall(
             r'<script\s+type="application/ld\+json"[^>]*>(.*?)</script>',
@@ -210,7 +318,6 @@ def _parse_jsonld_consensus(html):
 
 
 def _clean_html(text):
-    """Remove HTML tags and decode entities."""
     text = re.sub(r'<[^>]+>', '', text)
     text = text.replace('&amp;', '&')
     text = text.replace('&lt;', '<')
@@ -219,8 +326,8 @@ def _clean_html(text):
     text = text.replace('&#39;', "'")
     text = text.replace('&apos;', "'")
     text = text.replace('&#x27;', "'")
-    text = text.replace('&mdash;', '\u2014')
-    text = text.replace('&ndash;', '\u2013')
+    text = text.replace('&mdash;', '—')
+    text = text.replace('&ndash;', '–')
     text = text.replace('\n', ' ')
     text = re.sub(r'\s+', ' ', text)
     return text.strip()

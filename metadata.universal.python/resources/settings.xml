@@ -247,7 +247,7 @@
 					<constraints>
 						<options>
 							<option label="IMDb">IMDb</option>
-							<option label="RT Critics' Consensus (requires OMDb key)">RottenTomatoes</option>
+							<option label="RT Critics&apos; Consensus (requires OMDb key)">RottenTomatoes</option>
 							<option label="None">None</option>
 						</options>
 					</constraints>
@@ -509,7 +509,9 @@
 					<constraints>
 						<options>
 							<option label="IMDb">IMDb</option>
-							<option label="Rotten Tomatoes">Rotten Tomatoes</option>
+							<option label="Rotten Tomatoes (All Critics)">Rotten Tomatoes</option>
+							<option label="Rotten Tomatoes (Top Critics)">Top Critics</option>
+							<option label="Rotten Tomatoes (Audience)">Popcornmeter</option>
 							<option label="MetaCritic">MetaCritic</option>
 							<option label="TMDb">themoviedb.org</option>
 							<option label="Trakt">Trakt</option>
@@ -523,6 +525,26 @@
 					<dependencies>
 						<dependency type="visible">
 							<condition operator="!is" setting="mratingsource">Rotten Tomatoes</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="alsotopcritics" parent="mratingsource" type="boolean" label="30118" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="!is" setting="mratingsource">Top Critics</condition>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="alsopopcornmeter" parent="mratingsource" type="boolean" label="30117" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="!is" setting="mratingsource">Popcornmeter</condition>
 						</dependency>
 					</dependencies>
 					<control type="toggle"/>
@@ -545,8 +567,12 @@
 						<dependency type="visible">
 							<or>
 								<condition operator="is" setting="mratingsource">Rotten Tomatoes</condition>
+								<condition operator="is" setting="mratingsource">Top Critics</condition>
+								<condition operator="is" setting="mratingsource">Popcornmeter</condition>
 								<condition operator="is" setting="mratingsource">MetaCritic</condition>
 								<condition operator="is" setting="alsorotten">true</condition>
+								<condition operator="is" setting="alsotopcritics">true</condition>
+								<condition operator="is" setting="alsopopcornmeter">true</condition>
 								<condition operator="is" setting="alsometa">true</condition>
 							</or>
 						</dependency>
