@@ -34,12 +34,15 @@ except ModuleNotFoundError:
     xbmcvfs = None
     xbmcaddon = None
 
+from . import api_utils
+
 GRAPHQL_URL = 'https://graphql.imdb.com/'
 HEADERS = {
     'Content-Type': 'application/json',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept': 'application/json',
+    'Accept-Encoding': 'identity',
 }
 
 # In-memory cache: dict of imdb_id -> rank
@@ -77,7 +80,8 @@ def _graphql_request(query):
         req.add_header(k, v)
     try:
         response = urlopen(req, timeout=20)
-        return json.loads(response.read().decode('utf-8'))
+        body = api_utils.read_response_body(response)
+        return json.loads(body)
     except Exception as e:
         _log('GraphQL error: {}'.format(e))
         return None

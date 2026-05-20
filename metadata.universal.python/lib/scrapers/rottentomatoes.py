@@ -28,11 +28,14 @@ try:
 except ModuleNotFoundError:
     xbmc = None
 
+from . import api_utils
+
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'identity',
 }
 
 # Patterns to find Critics' Consensus on RT page
@@ -76,7 +79,7 @@ def get_rt_data(rt_url):
 
     try:
         response = urlopen(req, timeout=15)
-        html = response.read().decode('utf-8', errors='replace')
+        html = api_utils.read_response_body(response)
     except HTTPError as e:
         _log('HTTP error {}: {}'.format(e.code, rt_url), xbmc.LOGWARNING if xbmc else None)
         return result

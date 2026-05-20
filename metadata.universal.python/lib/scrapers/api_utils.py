@@ -19,7 +19,10 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import gzip
+import io
 import json
+import zlib
 
 try:
     import xbmc
@@ -50,6 +53,71 @@ def set_headers(headers):
     HEADERS.update(headers)
 
 
+def _get_content_encoding(response):
+    """Return Content-Encoding header value (lowercased) or empty string."""
+    encoding = ''
+    try:
+        encoding = response.headers.get('Content-Encoding', '') or ''
+    except AttributeError:
+        try:
+            encoding = response.info().get('Content-Encoding', '') or ''
+        except Exception:
+            encoding = ''
+    return encoding.lower().strip()
+
+
+def _maybe_decompress(data, content_encoding):
+    """Decompress bytes if Content-Encoding indicates gzip/deflate, or if
+    the body itself starts with the gzip magic number even though no header
+    advertised it. The latter handles a known CloudFront edge case where
+    cached gzipped responses are sometimes served even to clients that did
+    not send Accept-Encoding: gzip.
+
+    Reference: https://www.themoviedb.org/talk/6a0cf9a5dd8f54b8836a3750
+    """
+    if not isinstance(data, (bytes, bytearray)):
+        return data
+    is_gzip_header = content_encoding == 'gzip'
+    is_deflate_header = content_encoding == 'deflate'
+    is_gzip_magic = len(data) >= 2 and bytes(data[:2]) == b'\x1f\x8b'
+    if is_gzip_header or is_gzip_magic:
+        try:
+            return gzip.GzipFile(fileobj=io.BytesIO(bytes(data))).read()
+        except (IOError, OSError, EOFError) as e:
+            if xbmc:
+                xbmc.log('[metadata.universal.python] gzip decompress failed: {}'.format(e),
+                         xbmc.LOGWARNING)
+            return data
+    if is_deflate_header:
+        try:
+            return zlib.decompress(data)
+        except zlib.error:
+            # Some servers send raw deflate (no zlib header)
+            try:
+                return zlib.decompress(data, -zlib.MAX_WBITS)
+            except zlib.error as e:
+                if xbmc:
+                    xbmc.log('[metadata.universal.python] deflate decompress failed: {}'.format(e),
+                             xbmc.LOGWARNING)
+                return data
+    return data
+
+
+def read_response_body(response):
+    """Read a urlopen() response and return the body as a decoded UTF-8 string.
+
+    Transparently decompresses gzip/deflate-encoded responses, including
+    responses where the Content-Encoding header is missing but the body is
+    in fact gzipped (CloudFront caching anomaly).
+    """
+    raw = response.read()
+    encoding = _get_content_encoding(response)
+    decompressed = _maybe_decompress(raw, encoding)
+    if isinstance(decompressed, (bytes, bytearray)):
+        return bytes(decompressed).decode('utf-8', errors='replace')
+    return decompressed
+
+
 def load_info(url, params=None, default=None, resp_type = 'json'):
     # type: (Text, Optional[Dict[Text, Union[Text, List[Text]]]]) -> Union[dict, list]
     """
@@ -68,7 +136,12 @@ def load_info(url, params=None, default=None, resp_type = 'json'):
         xbmc.log('Calling URL "{}"'.format(url), xbmc.LOGDEBUG)
         if HEADERS:
             xbmc.log(str(HEADERS), xbmc.LOGDEBUG)
-    req = Request(url, headers=HEADERS)
+    # Request uncompressed content where supported; we still gunzip defensively
+    # in case the server (e.g. CloudFront) ignores this and ships gzip anyway.
+    request_headers = dict(HEADERS)
+    if 'Accept-Encoding' not in request_headers and 'accept-encoding' not in request_headers:
+        request_headers['Accept-Encoding'] = 'identity'
+    req = Request(url, headers=request_headers)
     try:
         response = urlopen(req)
     except URLError as e:
@@ -80,9 +153,10 @@ def load_info(url, params=None, default=None, resp_type = 'json'):
             return default
         else:
             return theerror
+    body = read_response_body(response)
     if resp_type.lower() == 'json':
-        resp = json.loads(response.read().decode('utf-8'))
+        resp = json.loads(body)
     else:
-        resp = response.read().decode('utf-8')
+        resp = body
     # xbmc.log('the api response:\n{}'.format(pformat(resp)), xbmc.LOGDEBUG)
     return resp

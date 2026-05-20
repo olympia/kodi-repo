@@ -37,6 +37,7 @@ except ModuleNotFoundError:
     xbmc = None
 
 from . import get_imdb_id
+from . import api_utils
 
 GRAPHQL_URL = 'https://graphql.imdb.com/'
 
@@ -45,6 +46,7 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept': 'application/json',
+    'Accept-Encoding': 'identity',
 }
 
 # Full GraphQL query — plot, outline, tagline, cast with photos, certifications
@@ -171,7 +173,7 @@ def _graphql_request(query, variables):
         req.add_header(k, v)
     try:
         response = urlopen(req, timeout=15)
-        body = response.read().decode('utf-8')
+        body = api_utils.read_response_body(response)
         return json.loads(body)
     except HTTPError as e:
         _log('HTTP error {}'.format(e.code), xbmc.LOGWARNING if xbmc else None)
