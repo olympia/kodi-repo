@@ -374,8 +374,36 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                     details['info']['genre'] = gql_info['genres']
                 if _imdb_top250 and gql_info.get('top250'):
                     details['info']['top250'] = gql_info['top250']
+                _missing = [name for name, wanted, value in (
+                    ('plot', _imdb_plot, gql_info.get('plot')),
+                    ('tagline', _imdb_tagline, gql_info.get('tagline')),
+                    ('outline', _imdb_outline, gql_info.get('outline')),
+                    ('credits/cast', _imdb_credits, imdb_gql.get('cast')),
+                    ('certification', _imdb_cert, imdb_gql.get('certifications')),
+                    ('genre', _imdb_genres, gql_info.get('genres')),
+                ) if wanted and not value]  # top250 is absent for most movies, not an issue
+                if _missing:
+                    log('IMDb GraphQL returned no data for the following requested '
+                        'fields: {}. They keep their TMDb value or stay empty.'
+                        .format(', '.join(_missing)), xbmc.LOGWARNING)
             elif imdb_gql and 'error' in imdb_gql:
-                log('IMDb GraphQL error: ' + imdb_gql['error'], xbmc.LOGWARNING)
+                _requested = [name for name, wanted in (
+                    ('plot', _imdb_plot),
+                    ('tagline', _imdb_tagline),
+                    ('outline', _imdb_outline),
+                    ('credits/cast', _imdb_credits),
+                    ('certification', _imdb_cert),
+                    ('genre', _imdb_genres),
+                    ('top250', _imdb_top250),
+                ) if wanted]
+                log('IMDb GraphQL request failed: {}. None of the fields configured '
+                    'to use IMDb could be scraped ({}); they keep their TMDb value '
+                    'or stay empty.'.format(imdb_gql['error'], ', '.join(_requested)),
+                    xbmc.LOGERROR)
+            else:
+                log('IMDb GraphQL returned no response (no IMDb ID for this movie?); '
+                    'fields configured to use IMDb keep their TMDb value or stay empty.',
+                    xbmc.LOGWARNING)
 
     if _need_rt_consensus:
         consensus = ''

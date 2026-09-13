@@ -39,15 +39,24 @@ except ModuleNotFoundError:
 from . import get_imdb_id
 from . import api_utils
 
-GRAPHQL_URL = 'https://graphql.imdb.com/'
+# api.graphql.imdb.com is the host IMDb's own clients use for API traffic and it
+# accepts plain server-side requests. graphql.imdb.com (the website's endpoint)
+# sits behind a WAF that answers 403 to any request without browser cookies.
+GRAPHQL_URL = 'https://api.graphql.imdb.com/'
 
+# x-imdb-client-name identifies the caller as an IMDb web client; without it the
+# endpoint rejects the request.
 HEADERS = {
     'Content-Type': 'application/json',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                  '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'x-imdb-client-name': 'imdb-web-next-localized',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) '
+                  'Gecko/20100101 Firefox/47.0',
     'Accept': 'application/json',
     'Accept-Encoding': 'identity',
 }
+
+# Name of the operation in MOVIE_QUERY, sent as operationName in the payload.
+MOVIE_QUERY_NAME = 'GetMovieDetails'
 
 # Full GraphQL query — plot, outline, tagline, cast with photos, certifications
 MOVIE_QUERY = '''
@@ -87,9 +96,11 @@ query GetMovieDetails($id: ID!) {
       voteCount
       topRanking { rank }
     }
-    genres {
+    titleGenres {
       genres {
-        text
+        genre {
+          text
+        }
       }
     }
     runtime {
@@ -165,9 +176,12 @@ def _log(msg, level=None):
         xbmc.log('[metadata.universal.python] IMDb GraphQL: {}'.format(msg), level)
 
 
-def _graphql_request(query, variables):
+def _graphql_request(query, variables, operation_name=None):
     """Send a GraphQL request to IMDb and return parsed JSON response."""
-    payload = json.dumps({'query': query, 'variables': variables}).encode('utf-8')
+    body_dict = {'query': query, 'variables': variables}
+    if operation_name:
+        body_dict['operationName'] = operation_name
+    payload = json.dumps(body_dict).encode('utf-8')
     req = Request(GRAPHQL_URL, data=payload)
     for k, v in HEADERS.items():
         req.add_header(k, v)
@@ -176,7 +190,8 @@ def _graphql_request(query, variables):
         body = api_utils.read_response_body(response)
         return json.loads(body)
     except HTTPError as e:
-        _log('HTTP error {}'.format(e.code), xbmc.LOGWARNING if xbmc else None)
+        _log('HTTP error {} from {}'.format(e.code, GRAPHQL_URL),
+             xbmc.LOGWARNING if xbmc else None)
         return {'error': 'HTTP error {}'.format(e.code)}
     except URLError as e:
         _log('URL error: {}'.format(e.reason), xbmc.LOGWARNING if xbmc else None)
@@ -209,17 +224,20 @@ def get_details(uniqueids, include_spoilers=False):
         return {}
 
     _log('Fetching details for {}'.format(imdb_id))
-    response = _graphql_request(MOVIE_QUERY, {'id': imdb_id})
+    response = _graphql_request(MOVIE_QUERY, {'id': imdb_id},
+                                operation_name=MOVIE_QUERY_NAME)
 
     if 'error' in response:
         return {'error': response['error']}
 
     # Check for GraphQL-level errors
     if 'errors' in response and response['errors']:
-        error_msg = response['errors'][0].get('message', 'Unknown GraphQL error')
-        _log('GraphQL error: {}'.format(error_msg), xbmc.LOGWARNING if xbmc else None)
+        messages = [e.get('message', 'Unknown GraphQL error') for e in response['errors']]
+        error_msg = ' | '.join(messages)
+        _log('GraphQL error for {}: {}'.format(imdb_id, error_msg),
+             xbmc.LOGERROR if xbmc else None)
         # Still try to use partial data if available
-        if not response.get('data', {}).get('title'):
+        if not (response.get('data') or {}).get('title'):
             return {'error': error_msg}
 
     title_data = (response.get('data') or {}).get('title')
@@ -303,9 +321,12 @@ def get_details(uniqueids, include_spoilers=False):
             info['tagline'] = first_tagline
 
     # Genres
-    genres_data = (title_data.get('genres') or {}).get('genres', [])
+    # Title.titleGenres -> genres[] -> genre { text }. There is no plain
+    # `genres` field on Title; requesting one makes IMDb reject the whole query.
+    genres_data = (title_data.get('titleGenres') or {}).get('genres', [])
     if genres_data:
-        info['genres'] = [g['text'] for g in genres_data if g.get('text')]
+        info['genres'] = [g['genre']['text'] for g in genres_data
+                          if (g.get('genre') or {}).get('text')]
 
     # Default certification
     cert_data = title_data.get('certificate')
