@@ -9,6 +9,7 @@ from lib.scrapers.tmdb import TMDBMovieScraper
 from lib.scrapers.fanarttv import get_details as get_fanarttv_artwork
 from lib.scrapers.imdbratings import get_details as get_imdb_details
 from lib.scrapers.imdb_graphql import get_details as get_imdb_graphql_details
+from lib.scrapers.imdb_graphql import get_genres as get_imdb_genres
 from lib.scrapers.imdb_dataset import needs_update as imdb_dataset_needs_update
 from lib.scrapers.imdb_dataset import update_database as imdb_dataset_update
 from lib.scrapers.traktratings import get_trakt_ratinginfo
@@ -215,6 +216,15 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                         details['info']['mpaa'] = cert_value
                 if not settings.getSettingBool('imdbtop250'):
                     details['info'].pop('top250', None)
+                # In this path genres always come from IMDb (TMDb is
+                # unreachable), but only honour the IMDb genre language when
+                # the user actually selected IMDb as the genre source.
+                if (details['info'].get('genre') and
+                        settings.getSettingString('genressource') == 'IMDb'):
+                    _fb_genre_lang = settings.getSettingString('imdbgenreslanguage')
+                    _fb_genres = get_imdb_genres(details['uniqueids'], _fb_genre_lang)
+                    if _fb_genres:
+                        details['info']['genre'] = _fb_genres
         if not details:
             return False
     if 'error' in details:
@@ -372,6 +382,11 @@ def get_details(input_uniqueids, handle, settings, fail_silently=False):
                         details['info']['mpaa'] = cert_value
                 if _imdb_genres and gql_info.get('genres'):
                     details['info']['genre'] = gql_info['genres']
+                    _imdb_genre_lang = settings.getSettingString('imdbgenreslanguage')
+                    localized_genres = get_imdb_genres(details['uniqueids'],
+                                                       _imdb_genre_lang)
+                    if localized_genres:
+                        details['info']['genre'] = localized_genres
                 if _imdb_top250 and gql_info.get('top250'):
                     details['info']['top250'] = gql_info['top250']
                 _missing = [name for name, wanted, value in (

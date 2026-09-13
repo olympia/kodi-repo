@@ -126,6 +126,14 @@ msgctxt "#30049"
 msgid "Enable tag whitelist"
 msgstr ""
 
+msgctxt "#30050"
+msgid "Genres language (IMDb)"
+msgstr ""
+
+msgctxt "#30051"
+msgid "IMDb only provides translated genre names for its own supported languages. Any other language falls back to English."
+msgstr ""
+
 msgctxt "#30060"
 msgid "Max artwork per type"
 msgstr ""

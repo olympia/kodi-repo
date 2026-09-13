@@ -93,6 +93,24 @@
 					</constraints>
 					<control type="list" format="string"><heading>30040</heading></control>
 				</setting>
+				<setting id="imdbgenreslanguage" parent="genressource" type="string" label="30050" help="30051">
+					<level>0</level>
+					<default>en-US</default>
+					<dependencies>
+						<dependency type="visible">
+							<condition operator="is" setting="genressource">IMDb</condition>
+						</dependency>
+					</dependencies>
+					<constraints>
+						<options>
+							<option>de-DE</option><option>en-US</option><option>es-ES</option><option>es-MX</option>
+							<option>fr-CA</option><option>fr-FR</option><option>hi-IN</option><option>it-IT</option>
+							<option>ja-JP</option><option>ko-KR</option><option>pt-BR</option><option>pt-PT</option>
+							<option>zh-CN</option><option>zh-TW</option>
+						</options>
+					</constraints>
+					<control type="list" format="string"><heading>30050</heading></control>
+				</setting>
 			</group>
 			<group id="3">
 				<setting id="tmdbset" type="boolean" label="30013" help="">

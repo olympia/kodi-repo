@@ -168,6 +168,34 @@ query GetMovieDetails($id: ID!) {
 }
 '''
 
+# Small stand-alone query used only when genres are wanted in a language other
+# than English. It is sent as a separate request because the localization
+# headers affect the whole response (title, outline and certificate too), and
+# the main query must stay in the source language the other settings expect.
+GENRES_QUERY = '''
+query GetMovieGenres($id: ID!) {
+  title(id: $id) {
+    titleGenres {
+      genres {
+        genre {
+          text
+        }
+      }
+    }
+  }
+}
+'''
+
+GENRES_QUERY_NAME = 'GetMovieGenres'
+
+# Languages IMDb actually translates genre names into. Anything else silently
+# returns English, so there is no point spending a request on it. Measured
+# against the live API, 2026-09-13.
+LOCALIZED_GENRE_LANGUAGES = (
+    'de-DE', 'en-US', 'es-ES', 'es-MX', 'fr-CA', 'fr-FR', 'hi-IN',
+    'it-IT', 'ja-JP', 'ko-KR', 'pt-BR', 'pt-PT', 'zh-CN', 'zh-TW',
+)
+
 
 def _log(msg, level=None):
     if xbmc:
@@ -176,14 +204,17 @@ def _log(msg, level=None):
         xbmc.log('[metadata.universal.python] IMDb GraphQL: {}'.format(msg), level)
 
 
-def _graphql_request(query, variables, operation_name=None):
+def _graphql_request(query, variables, operation_name=None, extra_headers=None):
     """Send a GraphQL request to IMDb and return parsed JSON response."""
     body_dict = {'query': query, 'variables': variables}
     if operation_name:
         body_dict['operationName'] = operation_name
     payload = json.dumps(body_dict).encode('utf-8')
     req = Request(GRAPHQL_URL, data=payload)
-    for k, v in HEADERS.items():
+    headers = dict(HEADERS)
+    if extra_headers:
+        headers.update(extra_headers)
+    for k, v in headers.items():
         req.add_header(k, v)
     try:
         response = urlopen(req, timeout=15)
@@ -410,3 +441,47 @@ def get_details(uniqueids, include_spoilers=False):
         result['writers'] = [w for w in result['writers'] if w]
 
     return result
+
+
+def get_genres(uniqueids, language):
+    """Fetch genre names in `language` with a separate, localized request.
+
+    Only genres are requested, because the IMDb localization headers also
+    change the title, the outline and the certificate in the response.
+
+    Returns a list of genre names, or [] when the language is not one IMDb
+    translates, when there is no IMDb ID, or when the request fails. The caller
+    then keeps whatever the main (English) query returned.
+    """
+    if not language or language == 'en-US':
+        return []
+    if language not in LOCALIZED_GENRE_LANGUAGES:
+        _log('IMDb does not translate genres into {}, keeping English'.format(language))
+        return []
+
+    imdb_id = get_imdb_id(uniqueids)
+    if not imdb_id:
+        return []
+
+    country = language.split('-')[-1]
+    extra_headers = {
+        'X-Imdb-User-Language': language,
+        'X-Imdb-User-Country': country,
+    }
+    _log('Fetching {} genres for {}'.format(language, imdb_id))
+    response = _graphql_request(GENRES_QUERY, {'id': imdb_id},
+                                operation_name=GENRES_QUERY_NAME,
+                                extra_headers=extra_headers)
+
+    if 'error' in response:
+        _log('Localized genre request failed: {}'.format(response['error']),
+             xbmc.LOGWARNING if xbmc else None)
+        return []
+
+    title_data = (response.get('data') or {}).get('title')
+    if not title_data:
+        return []
+
+    genres_data = (title_data.get('titleGenres') or {}).get('genres', [])
+    return [g['genre']['text'] for g in genres_data
+            if (g.get('genre') or {}).get('text')]
