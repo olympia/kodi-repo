@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addons>
+  <addon id="skin.confluence.olympia" version="1.0.0" name="Confluence Olympia" provider-name="Olympia, Jezz_X, Team Kodi">
+    <requires>
+      <import addon="xbmc.gui" version="5.17.0" />
+      <import addon="xbmc.python" version="3.0.0" />
+    </requires>
+    <extension point="xbmc.gui.skin" debugging="false" effectslowdown="1.0">
+      <res width="1920" height="1080" aspect="16:9" default="true" folder="1080p" />
+    </extension>
+    <extension point="xbmc.addon.metadata">
+      <platform>all</platform>
+      <license>GNU General Public License version 2</license>
+      <forum>https://github.com/olympia/kodi-repo/issues</forum>
+      <source>https://github.com/olympia/kodi-repo/tree/main/skin.confluence.olympia</source>
+      <assets>
+        <icon>resources/icon.png</icon>
+        <fanart>resources/fanart.jpg</fanart>
+      </assets>
+      <news>1.0.0: First Confluence Olympia release for Kodi 21 Omega.</news>
+      <summary lang="en_GB">Confluence Olympia for Kodi 21 Omega</summary>
+      <summary lang="hu_HU">Confluence Olympia a Kodi 21 Omega rendszerhez</summary>
+      <description lang="en_GB">An Olympia customization of Confluence for Kodi 21 Omega. Includes a compact Fanart information panel, IMDb and Rotten Tomatoes ratings, keyart and clearart fallbacks, a large artwork selection grid, configurable library-node submenus and Movies source filtering with movie-set grouping. Installs alongside the original Confluence with separate settings.</description>
+      <description lang="hu_HU">A Confluence Olympia által módosított változata Kodi 21 Omega rendszerhez. Kompakt Fanart információs panel, IMDb- és Rotten Tomatoes-értékelések, keyart és clearart poszter-visszaeséssel, nagy képkiválasztó rács, választható library node almenük és filmforrás-szűrés collection-csoportosítással. Az eredeti Confluence mellett, külön beállításokkal telepíthető.</description>
+    </extension>
+  </addon>
+</addons>

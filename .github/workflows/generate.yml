@@ -4,7 +4,9 @@ on:
   push:
     branches: [main]
     paths-ignore:
+      - '**/addons.xml'
       - 'addons.xml'
+      - '**/addons.xml.md5'
       - 'addons.xml.md5'
       - '**/*.zip'
 
@@ -30,7 +32,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add addons.xml addons.xml.md5 '**/*.zip'
+          git add addons.xml addons.xml.md5 omega/addons.xml omega/addons.xml.md5 '**/*.zip'
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else

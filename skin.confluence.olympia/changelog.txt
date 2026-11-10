@@ -1,0 +1,14 @@
+Confluence Olympia 1.0.0 - 2026-11-10
+
+Initial release for Kodi 21 Omega, based on Confluence 5.0.9.
+- Compact, fixed-position Fanart movie information panel.
+- Original title, first director/writer, up to three genres, IMDb votes and RT AllCritics.
+- Playback clearart and movie information keyart, with poster fallbacks.
+- Centered media flags, selected-poster sizing and MPAA footer artwork.
+- Four-column, two-row artwork picker with large thumbnails and side preview.
+- Six configurable library-node submenu positions for Movies and TV Shows.
+- Configurable Movies source filter with mixed movie-set grouping.
+- Separate add-on ID, settings, helper properties and generated playlist.
+
+Original Confluence: Jezz_X and Team Kodi, GPL-2.0-or-later.
+Olympia modifications: Olympia, GPL-2.0-or-later.

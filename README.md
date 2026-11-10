@@ -1,16 +1,17 @@
 # Olympia's Kodi Repository
 
-Custom Kodi addon repository. Home of the **Universal Movie Scraper**.
+Custom Kodi addon repository. Home of the **Universal Movie Scraper** and **Confluence Olympia** for Kodi 21 Omega.
 
 ## Hosted addons
 
 | Addon | ID |
 |---|---|
 | Universal Movie Scraper | `metadata.universal.python` |
+| Confluence Olympia (Kodi 21 Omega) | `skin.confluence.olympia` |
 
 ## How to install in Kodi
 
-1. Download the latest repo zip: [repository.olympia-1.0.0.zip](https://olympia.github.io/kodi-repo/repository.olympia/repository.olympia-1.0.0.zip)
+1. Download the latest repo zip: [repository.olympia-1.1.0.zip](https://olympia.github.io/kodi-repo/repository.olympia/repository.olympia-1.1.0.zip)
 2. In Kodi: **Settings → Add-ons → Install from zip file** → select the downloaded zip
 3. Then: **Install from repository → Olympia's Repository** → browse and install addons
 
@@ -47,10 +48,26 @@ kodi-repo/
 ├── addons.xml.md5                         ← generated: checksum
 ├── repository.olympia/
 │   ├── addon.xml
-│   └── repository.olympia-1.0.0.zip      ← generated
+│   └── repository.olympia-1.1.0.zip      ← generated
 ├── metadata.universal.python/
 │   ├── addon.xml                          ← your addon's descriptor
 │   ├── ... (addon source files)
 │   └── metadata.universal.python-x.y.z.zip  ← generated
 └── README.md
 ```
+
+## Confluence Olympia (Omega only)
+
+The skin is published in `omega/addons.xml`, served only when Kodi's repository API
+version is between 21.0.0 and 21.9.999. The general index continues serving the scraper
+and repository addon to their supported Kodi versions. Update Olympia's Repository
+to **1.1.0** to discover the additional Omega channel.
+
+In Kodi 21: Install from repository -> Olympia's Repository -> Look and feel -> Skin
+-> Confluence Olympia. Select it in Settings -> Interface -> Skin. It has independent
+settings and can coexist with the original Confluence.
+
+Skin sources: `skin.confluence.olympia/`. The generator packages these sources and
+updates both index/checksum pairs; CI commits the generated artifacts. Bump the skin
+version in addon.xml for each release. Existing release archives remain available.
+See the skin README and CHANGELOG.txt for features and upstream license credits.
