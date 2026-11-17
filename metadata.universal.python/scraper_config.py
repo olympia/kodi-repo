@@ -141,12 +141,6 @@ def _configure_tags(details, settings):
     return details
 
 
-# pylint: disable=invalid-name
-try:
-    basestring
-except NameError:  # py2 / py3
-    basestring = str
-
 #pylint: disable=redefined-builtin
 class PathSpecificSettings(object):
     # read-only shim for typed `xbmcaddon.Addon().getSetting*` methods
@@ -164,7 +158,7 @@ class PathSpecificSettings(object):
         return self._inner_get_setting(id, float, 0.0)
 
     def getSettingString(self, id):
-        return self._inner_get_setting(id, basestring, '')
+        return self._inner_get_setting(id, str, '')
 
     def getStringList(self, id):
         return self._inner_get_setting(id, list, [])

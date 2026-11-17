@@ -17,8 +17,6 @@
 
 """Functions to interact with various web site APIs."""
 
-from __future__ import absolute_import, unicode_literals
-
 import gzip
 import io
 import json
@@ -31,19 +29,11 @@ except ModuleNotFoundError:
     xbmc = None
 
 # from pprint import pformat
-try: #PY2 / PY3
-    from urllib2 import Request, urlopen
-    from urllib2 import URLError
-    from urllib import urlencode
-except ImportError:
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError
-    from urllib.parse import urlencode
-try:
-    from typing import Text, Optional, Union, List, Dict, Any  # pylint: disable=unused-import
-    InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
-except ImportError:
-    pass
+from urllib.request import Request, urlopen
+from urllib.error import URLError
+from urllib.parse import urlencode
+from typing import Text, Optional, Union, List, Dict, Any  # pylint: disable=unused-import
+InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
 
 HEADERS = {}
 

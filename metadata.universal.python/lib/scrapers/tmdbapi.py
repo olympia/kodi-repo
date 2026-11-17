@@ -25,11 +25,8 @@ try:
 except ModuleNotFoundError:
     # only used for logging HTTP calls, not available nor needed for testing
     xbmc = None
-try:
-    from typing import Optional, Text, Dict, List, Any  # pylint: disable=unused-import
-    InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
-except ImportError:
-    pass
+from typing import Optional, Text, Dict, List, Any  # pylint: disable=unused-import
+InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
 
 
 HEADERS = (

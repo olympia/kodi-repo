@@ -1,8 +1,5 @@
 import re
-try:
-    from urlparse import parse_qsl
-except ImportError: # py2 / py3
-    from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl
 
 # get addon params from the plugin path querystring
 def get_params(argv):

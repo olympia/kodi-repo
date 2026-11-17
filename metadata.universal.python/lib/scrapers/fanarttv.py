@@ -1,8 +1,5 @@
 from . import api_utils
-try:
-    from urllib import quote
-except ImportError: # py2 / py3
-    from urllib.parse import quote
+from urllib.parse import quote
 
 API_KEY = '384afe262ee0962545a752ff340e3ce4'
 API_URL = 'https://webservice.fanart.tv/v3/movies/{}'

@@ -17,11 +17,8 @@ Scrapes the Critics' Consensus text and rating data from a Rotten Tomatoes movie
 import json
 import re
 
-try:
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 
 try:
     import xbmc

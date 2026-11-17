@@ -13,7 +13,7 @@
   <extension point="xbmc.addon.metadata">
     <platform>all</platform>
     <license>GPL v2.0</license>
-    <forum>https://forum.kodi.tv/showthread.php?tid=129821</forum>
+    <forum>https://forum.kodi.tv/showthread.php?tid=385552</forum>
     <assets>
         <icon>icon.png</icon>
     </assets>

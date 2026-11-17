@@ -18,15 +18,10 @@
 
 """Functions to interact with Trakt API."""
 
-from __future__ import absolute_import, unicode_literals
-
 from . import api_utils
 from . import get_imdb_id
-try:
-    from typing import Optional, Text, Dict, List, Any  # pylint: disable=unused-import
-    InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
-except ImportError:
-    pass
+from typing import Optional, Text, Dict, List, Any  # pylint: disable=unused-import
+InfoType = Dict[Text, Any]  # pylint: disable=invalid-name
 
 
 HEADERS = (

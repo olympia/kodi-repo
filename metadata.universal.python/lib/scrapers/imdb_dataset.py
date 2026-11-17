@@ -23,11 +23,8 @@ import os
 import sqlite3
 import time
 
-try:
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError
-except ImportError:
-    from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 try:
     import xbmc

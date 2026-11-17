@@ -25,11 +25,8 @@ This endpoint is used by IMDb's own website and is not blocked by their WAF.
 
 import json
 
-try:
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 
 try:
     import xbmc
